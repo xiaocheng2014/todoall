@@ -1,0 +1,59 @@
+services:
+  migrate:
+    image: xiaocheng2014/todo-all:1.0.0
+    command: npm run db:deploy
+    env_file: .env
+    volumes:
+      - todoall_data:/app/data
+    restart: "no"
+
+  web:
+    image: xiaocheng2014/todo-all:1.0.0
+    command: npm start
+    env_file: .env
+    ports:
+      - "3000:3000"
+    volumes:
+      - todoall_data:/app/data
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/login').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  worker:
+    image: xiaocheng2014/todo-all:1.0.0
+    command: npm run worker
+    env_file: .env
+    volumes:
+      - todoall_data:/app/data
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  backup:
+    image: xiaocheng2014/todo-all:1.0.0
+    command: npm run db:backup
+    profiles: ["tools"]
+    env_file: .env
+    environment:
+      TODOALL_DB_PATH: /app/data/todoall.db
+      TODOALL_BACKUP_DIR: /app/backups
+    volumes:
+      - todoall_data:/app/data
+      - ./backups:/app/backups
+    restart: "no"
+
+volumes:
+  todoall_data:
