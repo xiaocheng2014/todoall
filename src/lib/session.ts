@@ -1,7 +1,8 @@
 import { createHash, randomBytes } from "node:crypto";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { shouldUseSecureSessionCookie } from "@/lib/session-cookie";
 
 const SESSION_COOKIE_NAME = "todoall_session";
 
@@ -28,11 +29,15 @@ export async function createSession(userId: string): Promise<void> {
     },
   });
 
+  const requestHeaders = await headers();
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: shouldUseSecureSessionCookie(
+      process.env.SESSION_COOKIE_SECURE,
+      requestHeaders.get("x-forwarded-proto"),
+    ),
     expires: expiresAt,
     path: "/",
   });

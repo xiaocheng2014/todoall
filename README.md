@@ -81,6 +81,8 @@ Compose 服务名和固定容器名均以 `todoall-` 开头：`todoall-web-app`�
 
 该配置把 Web 服务映射到宿主机的 `3000` 端口，并自动运行数据库迁移和 Bark worker。生产环境仍建议通过已有的 Nginx、宝塔或其他 HTTPS 网关代理该端口。
 
+会话 Cookie 会根据反向代理传入的 `X-Forwarded-Proto` 自动启用 HTTPS 安全标记。若代理未传递该请求头，可在 `.env` 中通过 `SESSION_COOKIE_SECURE=true` 强制启用；直接使用 `http://服务器地址:3000` 时设为 `false` 或保持未配置。
+
 首次部署后创建管理员：
 
 ```bash
