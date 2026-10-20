@@ -1,0 +1,205 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                     String              @id @default(cuid())
+  loginName              String
+  loginNameNormalized    String              @unique
+  displayName            String
+  passwordHash           String
+  role                   String              @default("USER")
+  status                 String              @default("ACTIVE")
+  mustChangePassword     Boolean             @default(true)
+  timezone               String              @default("Asia/Shanghai")
+  lastLoginAt            DateTime?
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+  sessions               Session[]
+  goals                  Goal[]
+  plans                  Plan[]
+  dailyTasks             DailyTask[]
+  progressEntries        ProgressEntry[]
+  notificationSetting    NotificationSetting?
+  notificationDeliveries NotificationDelivery[]
+  auditLogs              AuditLog[]          @relation("AuditActor")
+
+  @@index([status])
+}
+
+model Session {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model LoginAttempt {
+  id                  String   @id @default(cuid())
+  loginNameNormalized String
+  sourceHash          String
+  attemptedAt         DateTime @default(now())
+
+  @@index([loginNameNormalized, sourceHash, attemptedAt])
+  @@index([attemptedAt])
+}
+
+model Goal {
+  id          String     @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  startDate   String?
+  dueDate     String?
+  metricType  String?
+  targetValue Int?
+  unit        String?
+  status      String     @default("ACTIVE")
+  completedAt DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plans       PlanGoal[]
+
+  @@index([userId, status])
+  @@index([userId, dueDate])
+}
+
+model Plan {
+  id                    String      @id @default(cuid())
+  userId                String
+  name                  String
+  description           String?
+  metricType            String
+  targetValue           Int
+  unit                  String
+  recurrenceType        String
+  startDate             String
+  endDate               String?
+  weekdays              String?
+  durationDays          Int?
+  executionTime         String?
+  reminderOffsetMinutes Int?
+  status                String      @default("ACTIVE")
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  user                  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goals                 PlanGoal[]
+  dailyTasks            DailyTask[]
+
+  @@index([userId, status])
+  @@index([userId, startDate, endDate])
+}
+
+model PlanGoal {
+  id        String   @id @default(cuid())
+  userId    String
+  planId    String
+  goalId    String
+  createdAt DateTime @default(now())
+  plan      Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  goal      Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, goalId])
+  @@index([userId, goalId])
+}
+
+model DailyTask {
+  id                     String                 @id @default(cuid())
+  userId                 String
+  planId                 String?
+  taskDate               String
+  nameSnapshot           String
+  metricTypeSnapshot     String
+  targetValueSnapshot    Int
+  unitSnapshot           String
+  executionAt            DateTime?
+  currentValue           Int                    @default(0)
+  status                 String                 @default("PENDING")
+  completedAt            DateTime?
+  skippedAt              DateTime?
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  user                   User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan                   Plan?                  @relation(fields: [planId], references: [id], onDelete: SetNull)
+  progressEntries        ProgressEntry[]
+  notificationDeliveries NotificationDelivery[]
+
+  @@unique([planId, taskDate])
+  @@index([userId, taskDate, status])
+}
+
+model ProgressEntry {
+  id          String    @id @default(cuid())
+  userId      String
+  dailyTaskId String
+  value       Int
+  recordedAt  DateTime  @default(now())
+  note        String?
+  source      String    @default("MANUAL")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyTask   DailyTask @relation(fields: [dailyTaskId], references: [id], onDelete: Cascade)
+
+  @@index([userId, dailyTaskId])
+  @@index([userId, recordedAt])
+}
+
+model NotificationSetting {
+  id                       String   @id @default(cuid())
+  userId                   String   @unique
+  barkEnabled              Boolean  @default(false)
+  barkEndpointEncrypted    String?
+  dailySummaryEnabled      Boolean  @default(true)
+  dailySummaryTime         String   @default("22:00")
+  timedReminderEnabled     Boolean  @default(true)
+  defaultOffsetMinutes     Int      @default(1)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+  user                     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model NotificationDelivery {
+  id               String     @id @default(cuid())
+  userId           String
+  dailyTaskId      String?
+  type             String
+  scheduledAt      DateTime
+  sentAt           DateTime?
+  status           String     @default("PENDING")
+  attemptCount     Int        @default(0)
+  lastError        String?
+  deduplicationKey String     @unique
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  user             User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyTask        DailyTask? @relation(fields: [dailyTaskId], references: [id], onDelete: SetNull)
+
+  @@index([status, scheduledAt])
+  @@index([userId, createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  action     String
+  targetType String
+  targetId   String?
+  metadata   String?
+  createdAt  DateTime @default(now())
+  actor      User     @relation("AuditActor", fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([actorId, createdAt])
+  @@index([targetType, targetId])
+}

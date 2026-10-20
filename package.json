@@ -1,0 +1,49 @@
+{
+  "name": "todoall",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "test": "tsx --test src/**/*.test.ts",
+    "check:integration": "tsx scripts/integration-check.ts",
+    "worker": "tsx worker/index.ts",
+    "worker:once": "tsx worker/index.ts --once",
+    "db:generate": "prisma generate",
+    "db:configure": "tsx scripts/configure-sqlite.ts",
+    "predb:migrate": "tsx scripts/prepare-database.ts",
+    "db:migrate": "prisma migrate dev",
+    "postdb:migrate": "tsx scripts/configure-sqlite.ts",
+    "predb:deploy": "tsx scripts/prepare-database.ts",
+    "db:deploy": "prisma migrate deploy",
+    "postdb:deploy": "tsx scripts/configure-sqlite.ts",
+    "db:studio": "prisma studio",
+    "db:backup": "bash scripts/backup-sqlite.sh",
+    "admin:create": "tsx scripts/create-admin.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "6.19.3",
+    "next": "16.4.2",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/turbopack": "^4.3.3",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "dotenv": "^17.2.3",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "16.4.2",
+    "prisma": "6.19.3",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}
