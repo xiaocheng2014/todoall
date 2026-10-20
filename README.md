@@ -77,6 +77,8 @@ docker compose -f docker-compose.image.yml pull
 docker compose -f docker-compose.image.yml up -d
 ```
 
+Compose 使用固定的 TodoAll 容器名：`todoall-web-app`、`todoall-bark-worker`、`todoall-database-migrator`；备份工具容器名为 `todoall-database-backup`。
+
 该配置把 Web 服务映射到宿主机的 `3000` 端口，并自动运行数据库迁移和 Bark worker。生产环境仍建议通过已有的 Nginx、宝塔或其他 HTTPS 网关代理该端口。
 
 首次部署后创建管理员：

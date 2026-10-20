@@ -2,6 +2,7 @@ name: todoall
 
 services:
   database-migrator:
+    container_name: todoall-database-migrator
     image: xiaocheng2014/todo-all:1.0.0
     command: npm run db:deploy
     env_file: .env
@@ -10,6 +11,7 @@ services:
     restart: "no"
 
   web-app:
+    container_name: todoall-web-app
     image: xiaocheng2014/todo-all:1.0.0
     command: npm start
     env_file: .env
@@ -34,6 +36,7 @@ services:
       retries: 3
 
   bark-worker:
+    container_name: todoall-bark-worker
     image: xiaocheng2014/todo-all:1.0.0
     command: npm run worker
     env_file: .env
@@ -45,6 +48,7 @@ services:
     restart: unless-stopped
 
   database-backup:
+    container_name: todoall-database-backup
     image: xiaocheng2014/todo-all:1.0.0
     command: npm run db:backup
     profiles: ["tools"]
