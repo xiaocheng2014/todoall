@@ -1,7 +1,7 @@
 name: todoall
 
 services:
-  database-migrator:
+  todoall-database-migrator:
     container_name: todoall-database-migrator
     build: .
     command: npm run db:deploy
@@ -10,7 +10,7 @@ services:
       - todoall_data:/app/data
     restart: "no"
 
-  web-app:
+  todoall-web-app:
     container_name: todoall-web-app
     build: .
     command: npm start
@@ -20,7 +20,7 @@ services:
     volumes:
       - todoall_data:/app/data
     depends_on:
-      database-migrator:
+      todoall-database-migrator:
         condition: service_completed_successfully
     restart: unless-stopped
     healthcheck:
@@ -29,7 +29,7 @@ services:
       timeout: 5s
       retries: 3
 
-  bark-worker:
+  todoall-bark-worker:
     container_name: todoall-bark-worker
     build: .
     command: npm run worker
@@ -37,7 +37,7 @@ services:
     volumes:
       - todoall_data:/app/data
     depends_on:
-      database-migrator:
+      todoall-database-migrator:
         condition: service_completed_successfully
     restart: unless-stopped
 

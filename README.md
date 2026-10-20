@@ -63,7 +63,7 @@ npm run worker
 
 ```bash
 docker compose up -d --build
-docker compose run --rm web-app env ADMIN_LOGIN=admin ADMIN_NAME=管理员 ADMIN_PASSWORD='请替换为安全临时密码' npm run admin:create
+docker compose run --rm todoall-web-app env ADMIN_LOGIN=admin ADMIN_NAME=管理员 ADMIN_PASSWORD='请替换为安全临时密码' npm run admin:create
 ```
 
 Web 服务和通知 worker 共享同一个 SQLite 数据卷。生产环境应通过 HTTPS 反向代理暴露 Web 服务，并妥善保存 `.env` 中的加密密钥；密钥改变后，已保存的 Bark 地址将无法解密。
@@ -77,20 +77,20 @@ docker compose -f docker-compose.image.yml pull
 docker compose -f docker-compose.image.yml up -d
 ```
 
-Compose 使用固定的 TodoAll 容器名：`todoall-web-app`、`todoall-bark-worker`、`todoall-database-migrator`；备份工具容器名为 `todoall-database-backup`。
+Compose 服务名和固定容器名均以 `todoall-` 开头：`todoall-web-app`、`todoall-bark-worker`、`todoall-database-migrator`；备份工具为 `todoall-database-backup`。
 
 该配置把 Web 服务映射到宿主机的 `3000` 端口，并自动运行数据库迁移和 Bark worker。生产环境仍建议通过已有的 Nginx、宝塔或其他 HTTPS 网关代理该端口。
 
 首次部署后创建管理员：
 
 ```bash
-docker compose -f docker-compose.image.yml run --rm web-app env ADMIN_LOGIN=admin ADMIN_NAME=管理员 ADMIN_PASSWORD='请替换为安全临时密码' npm run admin:create
+docker compose -f docker-compose.image.yml run --rm todoall-web-app env ADMIN_LOGIN=admin ADMIN_NAME=管理员 ADMIN_PASSWORD='请替换为安全临时密码' npm run admin:create
 ```
 
 执行手动备份：
 
 ```bash
-docker compose -f docker-compose.image.yml --profile tools run --rm database-backup
+docker compose -f docker-compose.image.yml --profile tools run --rm todoall-database-backup
 ```
 
 不要执行 `docker compose down -v`，否则会删除保存 SQLite 数据库的命名卷。
