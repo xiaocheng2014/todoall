@@ -1,5 +1,7 @@
+name: todoall
+
 services:
-  migrate:
+  database-migrator:
     image: xiaocheng2014/todo-all:1.0.0
     command: npm run db:deploy
     env_file: .env
@@ -7,7 +9,7 @@ services:
       - todoall_data:/app/data
     restart: "no"
 
-  web:
+  web-app:
     image: xiaocheng2014/todo-all:1.0.0
     command: npm start
     env_file: .env
@@ -16,7 +18,7 @@ services:
     volumes:
       - todoall_data:/app/data
     depends_on:
-      migrate:
+      database-migrator:
         condition: service_completed_successfully
     restart: unless-stopped
     healthcheck:
@@ -31,18 +33,18 @@ services:
       timeout: 5s
       retries: 3
 
-  worker:
+  bark-worker:
     image: xiaocheng2014/todo-all:1.0.0
     command: npm run worker
     env_file: .env
     volumes:
       - todoall_data:/app/data
     depends_on:
-      migrate:
+      database-migrator:
         condition: service_completed_successfully
     restart: unless-stopped
 
-  backup:
+  database-backup:
     image: xiaocheng2014/todo-all:1.0.0
     command: npm run db:backup
     profiles: ["tools"]
